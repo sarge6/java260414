@@ -1,0 +1,28 @@
+name: VariableTransferDemo1
+on: [push]
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    # job1 outputs for other jobs
+	# $GITHUB_OUTPUT is path to runners temp file
+    outputs:
+      my_variable: ${{ steps.step1.outputs.test_param }}
+    steps:
+      - name: SetVariableStepJ1
+        id: step1
+        run: echo "test_param=Hello from Job1" >> $GITHUB_OUTPUT
+  job2:
+    runs-on: ubuntu-latest
+    # job2 waits for job1 
+    needs: job1
+    steps:
+      - name: OutputDataStepJ2
+        env:
+          # Zugriff auf den Output des vorherigen Jobs
+          RECEIVED_VAR: ${{ needs.job1.outputs.my_variable }}
+          # Zugriff auf das Repo-Secret (muss in den Repo-Settings angelegt sein)
+          MY_SECRET: ${{ secrets.DEMO1_SECRET }}
+        run: |
+          echo "Übertragene Variable: $RECEIVED_VAR"
+          echo "RepositoryOwner is: ${{ github.repository_owner }}"
+          echo "GitHubSecret is: $MY_SECRET"
